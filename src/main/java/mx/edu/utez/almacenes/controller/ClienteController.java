@@ -1,5 +1,6 @@
 package mx.edu.utez.almacenes.controller;
 
+import mx.edu.utez.almacenes.dto.AlmacenResponseDto;
 import mx.edu.utez.almacenes.dto.ClienteRequestDto;
 import mx.edu.utez.almacenes.dto.ClienteResponseDto;
 import mx.edu.utez.almacenes.service.ClienteService;
@@ -40,6 +41,12 @@ public class ClienteController {
     public ResponseEntity<ClienteResponseDto> getClientById(@PathVariable @NotNull Long id) {
         ClienteResponseDto client = clientService.getClientById(id);
         return ResponseEntity.ok(client);
+    }
+
+    @GetMapping("/{id}/almacenes")
+    public ResponseEntity<List<AlmacenResponseDto>> getAlmacenesByCliente(@PathVariable @NotNull Long id) {
+        List<AlmacenResponseDto> almacenes = clientService.getAlmacenesByCliente(id);
+        return ResponseEntity.ok(almacenes);
     }
 
     @GetMapping("/email/{email}")

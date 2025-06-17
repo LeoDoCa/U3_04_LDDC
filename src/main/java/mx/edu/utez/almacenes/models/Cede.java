@@ -19,7 +19,7 @@ public class Cede {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String clave;
 
     @NotBlank(message = "State is required")
@@ -30,15 +30,5 @@ public class Cede {
     @Column(nullable = false)
     private String municipio;
 
-    @PrePersist
-    @PreUpdate
-    public void generateKey() {
-        if (this.clave == null) {
-            String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
-            String randomDigits = String.format("%04d", new Random().nextInt(10000));
-            this.clave = String.format("C%d-%s-%s",
-                    this.id != null ? this.id : 0, dateStr, randomDigits);
-        }
-    }
 }
 

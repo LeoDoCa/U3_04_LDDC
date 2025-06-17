@@ -15,22 +15,42 @@ import java.util.Optional;
 @Repository
 public interface AlmacenRepository extends JpaRepository<Almacen, Long> {
 
-    Optional<Almacen> findByKey(String key);
+    Optional<Almacen> findByClave(String key);
 
     List<Almacen> findByCedeId(Long cedeId);
 
     List<Almacen> findBySize(AlmacenSize size);
 
-    @Query("SELECT w FROM Almacen w WHERE w.precio_venta BETWEEN :minPrice AND :maxPrice")
-    List<Almacen> findBySalePriceBetween(@Param("minPrice") BigDecimal minPrice,
+    @Query("SELECT w FROM Almacen w WHERE w.precioVenta BETWEEN :minPrice AND :maxPrice")
+    List<Almacen> findByPrecioVentaBetween(@Param("minPrice") BigDecimal minPrice,
                                            @Param("maxPrice") BigDecimal maxPrice);
 
-    @Query("SELECT w FROM Almacen w WHERE w.precio_renta BETWEEN :minPrice AND :maxPrice")
-    List<Almacen> findByRentalPriceBetween(@Param("minPrice") BigDecimal minPrice,
+    @Query("SELECT w FROM Almacen w WHERE w.precioRenta BETWEEN :minPrice AND :maxPrice")
+    List<Almacen> findByPrecioRentaBetween(@Param("minPrice") BigDecimal minPrice,
                                              @Param("maxPrice") BigDecimal maxPrice);
 
-    List<Almacen> findByRegistrationDateAfter(LocalDate date);
+    List<Almacen> findByFechaRegistroAfter(LocalDate date);
 
     @Query("SELECT COUNT(w) FROM Almacen w WHERE w.cede.id = :cedeId")
     long countByCedeId(@Param("cedeId") Long cedeId);
+
+    List<Almacen> findByVendidoFalseAndRentadoFalse();
+
+    List<Almacen> findByVendidoTrue();
+
+    List<Almacen> findByRentadoTrue();
+
+    List<Almacen> findByClienteId(Long clienteId);
+
+    @Query("SELECT a FROM Almacen a WHERE a.cliente.id = :clienteId AND (a.vendido = true OR a.rentado = true)")
+    List<Almacen> findActiveAlmacenesByClienteId(@Param("clienteId") Long clienteId);
+
+    @Query("SELECT COUNT(a) FROM Almacen a WHERE a.vendido = true")
+    Long countVendidos();
+
+    @Query("SELECT COUNT(a) FROM Almacen a WHERE a.rentado = true")
+    Long countRentados();
+
+    @Query("SELECT COUNT(a) FROM Almacen a WHERE a.vendido = false AND a.rentado = false")
+    Long countDisponibles();
 }

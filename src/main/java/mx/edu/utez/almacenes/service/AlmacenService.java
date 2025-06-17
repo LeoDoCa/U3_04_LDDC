@@ -39,14 +39,21 @@ public class AlmacenService {
         }
 
         Almacen warehouse = Almacen.builder()
-                .fecha_registro(request.getRegistrationDate())
-                .precio_venta(request.getSalePrice())
-                .precio_renta(request.getRentalPrice())
+                .fechaRegistro(request.getRegistrationDate())
+                .precioVenta(request.getSalePrice())
+                .precioRenta(request.getRentalPrice())
                 .size(request.getSize())
                 .cede(cede)
                 .build();
 
         Almacen savedWarehouse = warehouseRepository.save(warehouse);
+
+        savedWarehouse.setClave(String.format("%s-A%d",
+                savedWarehouse.getCede().getClave(),
+                savedWarehouse.getId()));
+
+        savedWarehouse = warehouseRepository.save(savedWarehouse);
+
         return mapToResponseDTO(savedWarehouse);
     }
 
@@ -67,7 +74,7 @@ public class AlmacenService {
 
     @Transactional(readOnly = true)
     public AlmacenResponseDto getWarehouseByKey(String key) {
-        Almacen warehouse = warehouseRepository.findByKey(key)
+        Almacen warehouse = warehouseRepository.findByClave(key)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "key", key));
         return mapToResponseDTO(warehouse);
     }
@@ -76,10 +83,13 @@ public class AlmacenService {
         Almacen existingWarehouse = warehouseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", id));
 
+        boolean cedeChanged = false;
+
         if (!existingWarehouse.getCede().getId().equals(request.getCedeId())) {
-            Cede cede = cedeRepository.findById(request.getCedeId())
+            Cede newCede = cedeRepository.findById(request.getCedeId())
                     .orElseThrow(() -> new ResourceNotFoundException("Cede", "id", request.getCedeId()));
-            existingWarehouse.setCede(cede);
+            existingWarehouse.setCede(newCede);
+            cedeChanged = true;
         }
 
         if (request.getRegistrationDate().isAfter(LocalDate.now())) {
@@ -90,10 +100,16 @@ public class AlmacenService {
             throw new InvalidDataException("Rental price must be less than sale price");
         }
 
-        existingWarehouse.setFecha_registro(request.getRegistrationDate());
-        existingWarehouse.setPrecio_venta(request.getSalePrice());
-        existingWarehouse.setPrecio_renta(request.getRentalPrice());
+        existingWarehouse.setFechaRegistro(request.getRegistrationDate());
+        existingWarehouse.setPrecioVenta(request.getSalePrice());
+        existingWarehouse.setPrecioRenta(request.getRentalPrice());
         existingWarehouse.setSize(request.getSize());
+
+        if (cedeChanged) {
+            existingWarehouse.setClave(String.format("%s-A%d",
+                    existingWarehouse.getCede().getClave(),
+                    existingWarehouse.getId()));
+        }
 
         Almacen updatedWarehouse = warehouseRepository.save(existingWarehouse);
         return mapToResponseDTO(updatedWarehouse);
@@ -127,7 +143,7 @@ public class AlmacenService {
         if (minPrice.compareTo(maxPrice) > 0) {
             throw new InvalidDataException("Minimum price cannot be greater than maximum price");
         }
-        return warehouseRepository.findBySalePriceBetween(minPrice, maxPrice)
+        return warehouseRepository.findByPrecioVentaBetween(minPrice, maxPrice)
                 .stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
@@ -144,9 +160,9 @@ public class AlmacenService {
         return AlmacenResponseDto.builder()
                 .id(warehouse.getId())
                 .key(warehouse.getClave())
-                .registrationDate(warehouse.getFecha_registro())
-                .salePrice(warehouse.getPrecio_venta())
-                .rentalPrice(warehouse.getPrecio_renta())
+                .registrationDate(warehouse.getFechaRegistro())
+                .salePrice(warehouse.getPrecioVenta())
+                .rentalPrice(warehouse.getPrecioRenta())
                 .size(warehouse.getSize())
                 .cede(cedeDto)
                 .build();

@@ -13,15 +13,21 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     Optional<Cliente> findByEmail(String email);
 
-    Optional<Cliente> findByPhoneNumber(String phoneNumber);
+    Optional<Cliente> findByNumeroTel(String phoneNumber);
 
-    @Query("SELECT c FROM Cliente c WHERE LOWER(c.nombre_completo) LIKE LOWER(CONCAT('%', :name, '%'))")
-    List<Cliente> findByFullNameContainingIgnoreCase(@Param("name") String name);
+    @Query("SELECT c FROM Cliente c WHERE LOWER(c.nombreCompleto) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Cliente> findByNombreCompletoContainingIgnoreCase(@Param("name") String name);
 
     boolean existsByEmail(String email);
 
-    boolean existsByPhoneNumber(String phoneNumber);
+    boolean existsByNumeroTel(String phoneNumber);
 
-    @Query("SELECT c FROM Cliente c WHERE LOWER(c.nombre_completo) LIKE LOWER(CONCAT(:prefix, '%'))")
-    List<Cliente> findByFullNameStartingWithIgnoreCase(@Param("prefix") String prefix);
+    @Query("SELECT c FROM Cliente c WHERE LOWER(c.nombreCompleto) LIKE LOWER(CONCAT(:prefix, '%'))")
+    List<Cliente> findByNombreCompletoStartingWithIgnoreCase(@Param("prefix") String prefix);
+
+    @Query("SELECT c FROM Cliente c WHERE c.nombreCompleto LIKE %:nombre%")
+    List<Cliente> findByNombreCompletoContaining(@Param("nombre") String nombre);
+
+    @Query("SELECT DISTINCT c FROM Cliente c JOIN c.almacenes a WHERE a.vendido = true OR a.rentado = true")
+    List<Cliente> findClientesConAlmacenes();
 }

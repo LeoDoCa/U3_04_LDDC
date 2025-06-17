@@ -11,13 +11,13 @@ import java.util.Optional;
 @Repository
 public interface CedeRepository extends JpaRepository<Cede, Long> {
 
-    Optional<Cede> findByKey(String key);
+    Optional<Cede> findByClave(String key);
 
     @Query("SELECT c FROM Cede c WHERE LOWER(c.estado) LIKE LOWER(CONCAT('%', :state, '%'))")
-    List<Cede> findByStateContainingIgnoreCase(@Param("state") String state);
+    List<Cede> findByEstadoContainingIgnoreCase(@Param("state") String state);
 
     @Query("SELECT c FROM Cede c WHERE LOWER(c.municipio) LIKE LOWER(CONCAT('%', :city, '%'))")
-    List<Cede> findByCityContainingIgnoreCase(@Param("city") String city);
+    List<Cede> findByMunicipioContainingIgnoreCase(@Param("city") String city);
 
-    boolean existsByStateAndCity(String state, String city);
+    boolean existsByEstadoAndMunicipio(String state, String city);
 }

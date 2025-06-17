@@ -20,22 +20,22 @@ public class Almacen {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String clave;
 
     @NotNull(message = "Registration date is required")
     @Column(nullable = false)
-    private LocalDate fecha_registro;
+    private LocalDate fechaRegistro;
 
     @NotNull(message = "Sale price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Sale price must be greater than 0")
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal precio_venta;
+    private BigDecimal precioVenta;
 
     @NotNull(message = "Rental price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Rental price must be greater than 0")
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal precio_renta;
+    private BigDecimal precioRenta;
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Size is required")
@@ -47,13 +47,19 @@ public class Almacen {
     @NotNull(message = "Cede is required")
     private Cede cede;
 
-    @PrePersist
-    @PreUpdate
-    public void generateKey() {
-        if (this.clave == null && this.cede != null) {
-            this.clave = String.format("%s-A%d",
-                    this.cede.getClave(),
-                    this.id != null ? this.id : 0);
-        }
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean vendido = false;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean rentado = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id", nullable = true)
+    private Cliente cliente;
+
+    public boolean isDisponible() {
+        return !vendido && !rentado;
     }
 }

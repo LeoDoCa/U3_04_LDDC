@@ -1,5 +1,6 @@
 package mx.edu.utez.almacenes.service;
 
+import mx.edu.utez.almacenes.dto.AlmacenResponseDto;
 import mx.edu.utez.almacenes.dto.ClienteRequestDto;
 import mx.edu.utez.almacenes.exception.DuplicateResourceException;
 import mx.edu.utez.almacenes.exception.ResourceNotFoundException;
@@ -25,13 +26,13 @@ public class ClienteService {
             throw new DuplicateResourceException("Client", "email", request.getEmail());
         }
 
-        if (clientRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+        if (clientRepository.existsByNumeroTel(request.getPhoneNumber())) {
             throw new DuplicateResourceException("Client", "phone number", request.getPhoneNumber());
         }
 
         Cliente client = Cliente.builder()
-                .nombre_completo(request.getFullName().trim())
-                .numero_tel(request.getPhoneNumber().trim())
+                .nombreCompleto(request.getFullName().trim())
+                .numeroTel(request.getPhoneNumber().trim())
                 .email(request.getEmail().toLowerCase().trim())
                 .build();
 
@@ -71,14 +72,14 @@ public class ClienteService {
             }
         }
 
-        if (!existingClient.getNumero_tel().equals(request.getPhoneNumber())) {
-            if (clientRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+        if (!existingClient.getNumeroTel().equals(request.getPhoneNumber())) {
+            if (clientRepository.existsByNumeroTel(request.getPhoneNumber())) {
                 throw new DuplicateResourceException("Client", "phone number", request.getPhoneNumber());
             }
         }
 
-        existingClient.setNombre_completo(request.getFullName().trim());
-        existingClient.setNumero_tel(request.getPhoneNumber().trim());
+        existingClient.setNombreCompleto(request.getFullName().trim());
+        existingClient.setNumeroTel(request.getPhoneNumber().trim());
         existingClient.setEmail(request.getEmail().toLowerCase().trim());
 
         Cliente updatedClient = clientRepository.save(existingClient);
@@ -95,18 +96,48 @@ public class ClienteService {
 
     @Transactional(readOnly = true)
     public List<ClienteResponseDto> searchClientsByName(String name) {
-        return clientRepository.findByFullNameContainingIgnoreCase(name)
+        return clientRepository.findByNombreCompletoContainingIgnoreCase(name)
                 .stream()
                 .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AlmacenResponseDto> getAlmacenesByCliente(Long clienteId) {
+        Cliente cliente = clientRepository.findById(clienteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente", "id", clienteId));
+
+        return cliente.getAlmacenes()
+                .stream()
+                .map(this::mapAlmacenToResponseDto)
                 .collect(Collectors.toList());
     }
 
     private ClienteResponseDto mapToResponseDTO(Cliente client) {
         return ClienteResponseDto.builder()
                 .id(client.getId())
-                .fullName(client.getNombre_completo())
-                .phoneNumber(client.getNumero_tel())
+                .fullName(client.getNombreCompleto())
+                .phoneNumber(client.getNumeroTel())
                 .email(client.getEmail())
+                .build();
+    }
+
+    private AlmacenResponseDto mapAlmacenToResponseDto(mx.edu.utez.almacenes.models.Almacen almacen) {
+        mx.edu.utez.almacenes.dto.CedeResponseDto cedeDto = mx.edu.utez.almacenes.dto.CedeResponseDto.builder()
+                .id(almacen.getCede().getId())
+                .key(almacen.getCede().getClave())
+                .state(almacen.getCede().getEstado())
+                .city(almacen.getCede().getMunicipio())
+                .build();
+
+        return AlmacenResponseDto.builder()
+                .id(almacen.getId())
+                .key(almacen.getClave())
+                .registrationDate(almacen.getFechaRegistro())
+                .salePrice(almacen.getPrecioVenta())
+                .rentalPrice(almacen.getPrecioRenta())
+                .size(almacen.getSize())
+                .cede(cedeDto)
                 .build();
     }
 }
